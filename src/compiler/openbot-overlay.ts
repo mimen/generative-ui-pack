@@ -1,7 +1,5 @@
 import { createHash } from "node:crypto";
 import baselinePackage from "./openbot-baseline/app-package.json.txt";
-import candidateLock from "./openbot-baseline/bun.lock.candidate.txt";
-import baselineLock from "./openbot-baseline/bun.lock.txt";
 import baselineCards from "./openbot-baseline/cards.tsx.txt";
 import baselineRegistry from "./openbot-baseline/gallery-registry.ts.txt";
 import baselineMain from "./openbot-baseline/main.tsx.txt";
@@ -10,12 +8,27 @@ import baselineQuote from "./openbot-baseline/quote.tsx.txt";
 import { stableJson } from "./stable-json";
 import type { CompiledFile, JsonObject } from "./types";
 
-export const OPENBOT_OVERLAY_CANDIDATE_SHA =
-	"4998ef1e5080418b30f890e24e0c573d31649cde" as const;
 export const OPENBOT_OVERLAY_HOST_SHA =
 	"6826e11afd52f03c30af2d873203792acad95f63" as const;
-export const OPENBOT_PACKAGE_SPEC =
-	`github:mimen/generative-ui-pack#${OPENBOT_OVERLAY_CANDIDATE_SHA}` as const;
+
+/**
+ * What a consumer installs by default.
+ *
+ * A release tag, not a commit: a commit cannot contain its own hash, so an overlay baked with a
+ * self-referencing SHA can never describe the release it ships in. The tag is resolved by the
+ * package manager at install time, and the release gate proves it resolves to the tested commit.
+ */
+export const OPENBOT_DEFAULT_PACK_REF = "v0.1.0" as const;
+
+/** A git ref safe to hand to a package manager: a tag, branch, or full commit. */
+export function isSafePackRef(ref: string): boolean {
+	return /^[0-9A-Za-z._/-]{1,100}$/.test(ref) && !ref.startsWith("-");
+}
+
+export function openBotPackageSpec(ref: string): string {
+	if (!isSafePackRef(ref)) throw new Error(`Unsafe package ref: ${ref}`);
+	return `github:mimen/generative-ui-pack#${ref}`;
+}
 
 const OWNED_NAMES = [
 	"showRecord",
@@ -39,7 +52,6 @@ const ALL_BASELINE_NAMES = [...OWNED_NAMES, ...RETAINED_NAMES].sort();
 
 const BASELINE_BY_PATH: Readonly<Record<string, string>> = {
 	"app/package.json": baselinePackage,
-	"bun.lock": baselineLock,
 	"app/src/main.tsx": baselineMain,
 	"app/src/components/gallery/cards.tsx": baselineCards,
 	"app/src/components/gallery/quote.tsx": baselineQuote,
@@ -63,8 +75,8 @@ export interface OpenBotOverlayManifest {
 	readonly formatVersion: 1;
 	readonly target: "openbot";
 	readonly hostCommit: typeof OPENBOT_OVERLAY_HOST_SHA;
-	readonly packageCommit: typeof OPENBOT_OVERLAY_CANDIDATE_SHA;
-	readonly packageSpec: typeof OPENBOT_PACKAGE_SPEC;
+	readonly packageRef: string;
+	readonly packageSpec: string;
 	readonly ownedNames: typeof OWNED_NAMES;
 	readonly retainedNames: typeof RETAINED_NAMES;
 	readonly expectedNamesBefore: readonly string[];
@@ -101,11 +113,12 @@ function replaceOnce(
 	return `${source.slice(0, index)}${replacement}${source.slice(index + needle.length)}`;
 }
 
-function packageOutput(): string {
+function packageOutput(packRef: string): string {
 	const parsed = JSON.parse(baselinePackage) as {
 		dependencies: Record<string, string>;
 	};
-	parsed.dependencies["@mimen/generative-ui-pack"] = OPENBOT_PACKAGE_SPEC;
+	parsed.dependencies["@mimen/generative-ui-pack"] =
+		openBotPackageSpec(packRef);
 	return `${JSON.stringify(parsed, null, 2)}\n`;
 }
 
@@ -195,13 +208,12 @@ function replacementRanges(
 	return ranges;
 }
 
-function buildOverlay(): {
+function buildOverlay(packRef: string): {
 	readonly manifest: OpenBotOverlayManifest;
 	readonly outputs: Readonly<Record<string, string>>;
 } {
 	const outputs = {
-		"app/package.json": packageOutput(),
-		"bun.lock": candidateLock,
+		"app/package.json": packageOutput(packRef),
 		"app/src/main.tsx": mainOutput(),
 		"app/src/components/gallery/cards.tsx": cardsOutput(),
 		"app/src/components/gallery/quote.tsx": quoteOutput(),
@@ -228,13 +240,6 @@ function buildOverlay(): {
 				"app/package.json",
 				outputs["app/package.json"],
 			),
-			generated: false,
-		},
-		{
-			path: "bun.lock",
-			expectedSha256: sha256(baselineLock),
-			outputSha256: sha256(outputs["bun.lock"]),
-			ranges: replacementRanges("bun.lock", outputs["bun.lock"]),
 			generated: false,
 		},
 		{
@@ -284,8 +289,8 @@ function buildOverlay(): {
 		formatVersion: 1,
 		target: "openbot",
 		hostCommit: OPENBOT_OVERLAY_HOST_SHA,
-		packageCommit: OPENBOT_OVERLAY_CANDIDATE_SHA,
-		packageSpec: OPENBOT_PACKAGE_SPEC,
+		packageRef: packRef,
+		packageSpec: openBotPackageSpec(packRef),
 		ownedNames: OWNED_NAMES,
 		retainedNames: RETAINED_NAMES,
 		expectedNamesBefore: [...expectedNamesBefore].sort(),
@@ -443,8 +448,10 @@ export function validateOverlayManifest(
 	}
 }
 
-export function compileOpenBotOverlayFiles(): readonly CompiledFile[] {
-	const { manifest, outputs } = buildOverlay();
+export function compileOpenBotOverlayFiles(
+	packRef: string = OPENBOT_DEFAULT_PACK_REF,
+): readonly CompiledFile[] {
+	const { manifest, outputs } = buildOverlay(packRef);
 	const files: CompiledFile[] = [
 		{
 			path: "openbot/overlay-manifest.json",
@@ -465,8 +472,9 @@ export function compileOpenBotOverlayFiles(): readonly CompiledFile[] {
 			content: stableJson(
 				jsonObject({
 					name: "@mimen/generative-ui-pack",
-					spec: OPENBOT_PACKAGE_SPEC,
-					commit: OPENBOT_OVERLAY_CANDIDATE_SHA,
+					spec: openBotPackageSpec(packRef),
+					ref: packRef,
+					lockfile: "regenerated by the installing host",
 				}),
 			),
 		},

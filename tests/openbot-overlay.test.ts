@@ -2,10 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import {
 	compileOpenBotOverlayFiles,
-	OPENBOT_OVERLAY_CANDIDATE_SHA,
+	OPENBOT_DEFAULT_PACK_REF,
 	OPENBOT_OVERLAY_HOST_SHA,
-	OPENBOT_PACKAGE_SPEC,
 	type OpenBotOverlayManifest,
+	openBotPackageSpec,
 	validateOverlayManifest,
 } from "../src/compiler/index";
 
@@ -24,21 +24,22 @@ describe("stock OpenBot overlay compiler", () => {
 			"openbot/files/app/src/components/gallery/portable-pack.tsx",
 			"openbot/files/app/src/components/gallery/quote.tsx",
 			"openbot/files/app/src/main.tsx",
-			"openbot/files/bun.lock",
 			"openbot/overlay-manifest.json",
 			"openbot/package-dependency.json",
 			"openbot/source-patches.json",
 		]);
 	});
 
-	test("pins the exact public host and candidate package commits", () => {
+	test("pins the exact public host commit and released package ref", () => {
 		const files = compiledFiles();
 		const manifest = JSON.parse(
 			files.get("openbot/overlay-manifest.json") ?? "",
 		) as OpenBotOverlayManifest;
 		expect(manifest.hostCommit).toBe(OPENBOT_OVERLAY_HOST_SHA);
-		expect(manifest.packageCommit).toBe(OPENBOT_OVERLAY_CANDIDATE_SHA);
-		expect(manifest.packageSpec).toBe(OPENBOT_PACKAGE_SPEC);
+		expect(manifest.packageRef).toBe(OPENBOT_DEFAULT_PACK_REF);
+		expect(manifest.packageSpec).toBe(
+			openBotPackageSpec(OPENBOT_DEFAULT_PACK_REF),
+		);
 		expect(manifest.guards).toContainEqual({
 			path: "app/src/lib/copilot/gallery-registry.ts",
 			expectedSha256:
@@ -48,15 +49,31 @@ describe("stock OpenBot overlay compiler", () => {
 			files.get("openbot/files/app/package.json") ?? "",
 		) as { dependencies: Record<string, string> };
 		expect(packageJson.dependencies["@mimen/generative-ui-pack"]).toBe(
-			OPENBOT_PACKAGE_SPEC,
+			openBotPackageSpec(OPENBOT_DEFAULT_PACK_REF),
 		);
 		expect(
 			manifest.patches.find((patch) => patch.path === "app/package.json")
 				?.ranges,
 		).toEqual([{ label: "diff-1", startLine: 38, endLine: 39 }]);
-		expect(files.get("openbot/files/bun.lock")).toContain(
-			OPENBOT_OVERLAY_CANDIDATE_SHA,
+		expect(files.get("openbot/files/bun.lock")).toBeUndefined();
+	});
+
+	test("pins whichever ref the caller releases, and refuses unsafe refs", () => {
+		const files = new Map(
+			compileOpenBotOverlayFiles("v9.9.9").map((file) => [
+				file.path,
+				file.content,
+			]),
 		);
+		const packageJson = JSON.parse(
+			files.get("openbot/files/app/package.json") ?? "",
+		) as { dependencies: Record<string, string> };
+		expect(packageJson.dependencies["@mimen/generative-ui-pack"]).toBe(
+			"github:mimen/generative-ui-pack#v9.9.9",
+		);
+		expect(() =>
+			compileOpenBotOverlayFiles("--upload-pack=touch /tmp/x"),
+		).toThrow("Unsafe package ref");
 	});
 
 	test("generates native adapter glue without copying renderer implementations", () => {

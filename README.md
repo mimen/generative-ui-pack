@@ -84,7 +84,7 @@ Compiler outputs are UTF-8, newline-terminated, path-sorted, key-sorted, and gen
 
 ## Stock OpenBot overlay
 
-The OpenBot compiler emits a source-hash-guarded overlay for public `CopilotKit/openbot@6826e11afd52f03c30af2d873203792acad95f63`. It pins this package at candidate `4998ef1e5080418b30f890e24e0c573d31649cde`, regenerates the root `bun.lock`, imports compiled CSS, replaces only Record, Metrics, Checklist, and Quote, and retains `showNotice` and every other unowned gallery name.
+The OpenBot compiler emits a source-hash-guarded overlay for public `CopilotKit/openbot@6826e11afd52f03c30af2d873203792acad95f63`. It pins this package at the released tag `v0.1.0` (override with `--pack-ref` while testing a candidate), lets the host regenerate its own `bun.lock`, imports compiled CSS, replaces only Record, Metrics, Checklist, and Quote, and retains `showNotice` and every other unowned gallery name.
 
 ```bash
 bun run compile --target openbot --out-dir generated

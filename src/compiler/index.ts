@@ -6,10 +6,11 @@ export {
 export type { OpenBotOverlayManifest } from "./openbot-overlay";
 export {
 	compileOpenBotOverlayFiles,
+	isSafePackRef,
 	OPENBOT_BASELINE_REGISTRY_SHA256,
-	OPENBOT_OVERLAY_CANDIDATE_SHA,
+	OPENBOT_DEFAULT_PACK_REF,
 	OPENBOT_OVERLAY_HOST_SHA,
-	OPENBOT_PACKAGE_SPEC,
+	openBotPackageSpec,
 	validateOverlayManifest,
 } from "./openbot-overlay";
 export { stableJson } from "./stable-json";

@@ -64,9 +64,18 @@ declare const COMPATIBILITY_MANIFEST: {
 };
 declare function compatibilityManifestJson(): JsonObject;
 
-declare const OPENBOT_OVERLAY_CANDIDATE_SHA: "4998ef1e5080418b30f890e24e0c573d31649cde";
 declare const OPENBOT_OVERLAY_HOST_SHA: "6826e11afd52f03c30af2d873203792acad95f63";
-declare const OPENBOT_PACKAGE_SPEC: "github:mimen/generative-ui-pack#4998ef1e5080418b30f890e24e0c573d31649cde";
+/**
+ * What a consumer installs by default.
+ *
+ * A release tag, not a commit: a commit cannot contain its own hash, so an overlay baked with a
+ * self-referencing SHA can never describe the release it ships in. The tag is resolved by the
+ * package manager at install time, and the release gate proves it resolves to the tested commit.
+ */
+declare const OPENBOT_DEFAULT_PACK_REF: "v0.1.0";
+/** A git ref safe to hand to a package manager: a tag, branch, or full commit. */
+declare function isSafePackRef(ref: string): boolean;
+declare function openBotPackageSpec(ref: string): string;
 declare const OWNED_NAMES: readonly ["showRecord", "showMetrics", "showChecklist", "showQuote"];
 declare const RETAINED_NAMES: readonly ["askApproval", "askChoice", "showActivityReport", "showAreaChart", "showBarChart", "showLineChart", "showNotice", "showPieChart", "showProgress"];
 interface ReplacementRange {
@@ -85,8 +94,8 @@ interface OpenBotOverlayManifest {
     readonly formatVersion: 1;
     readonly target: "openbot";
     readonly hostCommit: typeof OPENBOT_OVERLAY_HOST_SHA;
-    readonly packageCommit: typeof OPENBOT_OVERLAY_CANDIDATE_SHA;
-    readonly packageSpec: typeof OPENBOT_PACKAGE_SPEC;
+    readonly packageRef: string;
+    readonly packageSpec: string;
     readonly ownedNames: typeof OWNED_NAMES;
     readonly retainedNames: typeof RETAINED_NAMES;
     readonly expectedNamesBefore: readonly string[];
@@ -98,7 +107,7 @@ interface OpenBotOverlayManifest {
     readonly patches: readonly OverlayPatch[];
 }
 declare function validateOverlayManifest(manifest: OpenBotOverlayManifest, outputs: Readonly<Record<string, string>>): void;
-declare function compileOpenBotOverlayFiles(): readonly CompiledFile[];
+declare function compileOpenBotOverlayFiles(packRef?: string): readonly CompiledFile[];
 declare const OPENBOT_BASELINE_REGISTRY_SHA256: string;
 
 declare function stableJson(value: JsonValue): string;
@@ -117,4 +126,4 @@ type HostVerificationResult = {
 declare function verifyHostCheckout(compatibility: HostCompatibility, checkout: string): Promise<HostVerificationResult>;
 declare function verifyHostRemote(compatibility: HostCompatibility, remote?: string): Promise<HostVerificationResult>;
 
-export { COMPATIBILITY_MANIFEST, type CompatibilityManifest, type CompileResult, type CompiledFile, type HostCompatibility, type HostVerificationEvidence, type HostVerificationResult, type JsonObject, type JsonPrimitive, type JsonValue, OPENBOT_BASELINE_REGISTRY_SHA256, OPENBOT_OVERLAY_CANDIDATE_SHA, OPENBOT_OVERLAY_HOST_SHA, OPENBOT_PACKAGE_SPEC, type OpenBotOverlayManifest, compatibilityManifestJson, compileAllTargets, compileOpenBotOverlayFiles, compileTarget, stableJson, validateOverlayManifest, verifyHostCheckout, verifyHostRemote };
+export { COMPATIBILITY_MANIFEST, type CompatibilityManifest, type CompileResult, type CompiledFile, type HostCompatibility, type HostVerificationEvidence, type HostVerificationResult, type JsonObject, type JsonPrimitive, type JsonValue, OPENBOT_BASELINE_REGISTRY_SHA256, OPENBOT_DEFAULT_PACK_REF, OPENBOT_OVERLAY_HOST_SHA, type OpenBotOverlayManifest, compatibilityManifestJson, compileAllTargets, compileOpenBotOverlayFiles, compileTarget, isSafePackRef, openBotPackageSpec, stableJson, validateOverlayManifest, verifyHostCheckout, verifyHostRemote };

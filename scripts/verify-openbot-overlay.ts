@@ -17,7 +17,9 @@ import { chromium } from "playwright";
 import {
 	compileOpenBotOverlayFiles,
 	compileTarget,
+	isSafePackRef,
 	type JsonObject,
+	OPENBOT_DEFAULT_PACK_REF,
 	OPENBOT_OVERLAY_HOST_SHA,
 	type OpenBotOverlayManifest,
 	stableJson,
@@ -151,9 +153,12 @@ async function galleryNames(
 	return names;
 }
 
-async function applyCompiledBundle(checkout: string): Promise<void> {
+async function applyCompiledBundle(
+	checkout: string,
+	packRef: string,
+): Promise<void> {
 	const root = await realpath(checkout);
-	const compiled = compileOpenBotOverlayFiles();
+	const compiled = compileOpenBotOverlayFiles(packRef);
 	const byPath = new Map(compiled.map((file) => [file.path, file.content]));
 	const manifestContent = byPath.get("openbot/overlay-manifest.json");
 	if (!manifestContent) throw new Error("Compiled overlay manifest is missing");
@@ -244,18 +249,21 @@ async function applyCompiledBundle(checkout: string): Promise<void> {
 	}
 }
 
-function expectedChangedPaths(): readonly string[] {
-	const manifestFile = compileOpenBotOverlayFiles().find(
+function expectedChangedPaths(packRef: string): readonly string[] {
+	const manifestFile = compileOpenBotOverlayFiles(packRef).find(
 		(file) => file.path === "openbot/overlay-manifest.json",
 	);
 	if (!manifestFile) throw new Error("Compiled overlay manifest is missing");
 	const manifest = JSON.parse(manifestFile.content) as {
 		patches: readonly { path: string }[];
 	};
-	return manifest.patches.map((patch) => patch.path).sort();
+	return [...manifest.patches.map((patch) => patch.path), "bun.lock"].sort();
 }
 
-async function verifyChangedPaths(checkout: string): Promise<void> {
+async function verifyChangedPaths(
+	checkout: string,
+	packRef: string,
+): Promise<void> {
 	const status = await run(
 		"generative-ui-pack:git-status@openbot-overlay",
 		["git", "status", "--porcelain", "--untracked-files=all"],
@@ -266,7 +274,7 @@ async function verifyChangedPaths(checkout: string): Promise<void> {
 		.filter(Boolean)
 		.map((line) => line.slice(3))
 		.sort();
-	const expected = expectedChangedPaths();
+	const expected = expectedChangedPaths(packRef);
 	if (JSON.stringify(actual) !== JSON.stringify(expected)) {
 		throw new Error(
 			`Overlay changed undeclared paths. Expected ${expected.join(", ")}; received ${actual.join(", ")}`,
@@ -388,7 +396,10 @@ async function captureEvidence(
 	);
 }
 
-async function verifyOpenBotOverlay(evidenceDirectory: string): Promise<void> {
+async function verifyOpenBotOverlay(
+	evidenceDirectory: string,
+	packRef: string,
+): Promise<void> {
 	const checkout = await mkdtemp(join(tmpdir(), "openbot-overlay-verify-"));
 	try {
 		await run(
@@ -414,13 +425,13 @@ async function verifyOpenBotOverlay(evidenceDirectory: string): Promise<void> {
 			],
 			checkout,
 		);
-		await applyCompiledBundle(checkout);
-		await verifyChangedPaths(checkout);
+		await applyCompiledBundle(checkout, packRef);
 		await run(
 			"generative-ui-pack:install@openbot-overlay",
-			["bun", "install", "--frozen-lockfile"],
+			["bun", "install"],
 			checkout,
 		);
+		await verifyChangedPaths(checkout, packRef);
 		await verifyInstalledBindings(checkout);
 		await run(
 			"generative-ui-pack:typecheck@openbot-overlay",
@@ -449,7 +460,7 @@ async function verifyOpenBotOverlay(evidenceDirectory: string): Promise<void> {
 			false,
 		);
 		process.stdout.write("OpenBot production build passed\n");
-		await verifyChangedPaths(checkout);
+		await verifyChangedPaths(checkout, packRef);
 		await captureEvidence(checkout, evidenceDirectory);
 	} finally {
 		await rm(checkout, { recursive: true, force: true });
@@ -459,8 +470,14 @@ async function verifyOpenBotOverlay(evidenceDirectory: string): Promise<void> {
 const evidenceDirectory = resolve(
 	optionValue(process.argv, "--evidence-dir") ?? "evidence/openbot-overlay",
 );
+const packRef =
+	optionValue(process.argv, "--pack-ref") ?? OPENBOT_DEFAULT_PACK_REF;
+if (!isSafePackRef(packRef)) {
+	process.stderr.write(`Unsafe --pack-ref: ${packRef}\n`);
+	process.exit(1);
+}
 try {
-	await verifyOpenBotOverlay(evidenceDirectory);
+	await verifyOpenBotOverlay(evidenceDirectory, packRef);
 } catch (error) {
 	const message =
 		error instanceof Error
