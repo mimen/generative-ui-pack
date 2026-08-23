@@ -82,6 +82,19 @@ bun run src/cli.ts manifest
 
 Compiler outputs are UTF-8, newline-terminated, path-sorted, key-sorted, and generated solely from checked-in definitions. The current foundation emits compatibility and binding manifests. Host replacement-patch targets can build on the same `CompileResult` contract without changing the public package boundary.
 
+## Stock OpenBot overlay
+
+The OpenBot compiler emits a source-hash-guarded overlay for public `CopilotKit/openbot@6826e11afd52f03c30af2d873203792acad95f63`. It pins this package at candidate `4998ef1e5080418b30f890e24e0c573d31649cde`, regenerates the root `bun.lock`, imports compiled CSS, replaces only Record, Metrics, Checklist, and Quote, and retains `showNotice` and every other unowned gallery name.
+
+```bash
+bun run compile --target openbot --out-dir generated
+bun run verify:openbot-overlay --evidence-dir evidence/openbot-overlay
+```
+
+Compilation is pure: it emits generated files, exact source-patch descriptors, package dependency metadata, and the candidate lockfile without touching a host checkout. The generated `portable-pack.tsx` imports package renderers and OpenBot bindings; it contains adapter glue only.
+
+The verifier is the only command that applies the bundle. It creates and owns a fresh temporary clone at the pinned public commit, validates hashes, names, schemas, paths, ranges, and symlinks, applies inside that disposable clone, installs/tests/builds/captures evidence, and removes the clone on normal exit. It accepts no caller-supplied checkout path; a crash can leave only a disposable temporary directory.
+
 Host compatibility can be verified against a checkout or a reachable remote commit, including pinned public source blob hashes:
 
 ```bash

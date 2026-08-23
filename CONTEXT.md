@@ -36,6 +36,18 @@ A deterministic transformation from checked-in portable definitions to host-spec
 
 _Avoid:_ runtime plugin, installer, host fork.
 
+## Replacement overlay
+
+A deterministic, source-hash-guarded set of declared host file replacements. It may replace only names and paths owned by the pack and must prove that every unowned name remains present and unique.
+
+_Avoid:_ host fork, runtime installer, broad source rewrite.
+
+## Adapter glue
+
+Generated host-native catalogue records that import package schemas and renderers without copying their implementations.
+
+_Avoid:_ renderer implementation, second source, host controller.
+
 ## Compatibility manifest
 
 The package version, generated-file format version, view versions, and exact host commits supported by each compiler target.

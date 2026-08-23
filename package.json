@@ -52,6 +52,7 @@
     "evidence": "bun run render",
     "compile": "bun run src/cli.ts compile",
     "verify:host": "bun run scripts/verify-host.ts",
+    "verify:openbot-overlay": "bun run scripts/verify-openbot-overlay.ts",
     "verify:release": "bun run scripts/verify-release.ts"
   },
   "peerDependencies": {

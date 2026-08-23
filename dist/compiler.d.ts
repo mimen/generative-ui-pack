@@ -64,6 +64,43 @@ declare const COMPATIBILITY_MANIFEST: {
 };
 declare function compatibilityManifestJson(): JsonObject;
 
+declare const OPENBOT_OVERLAY_CANDIDATE_SHA: "4998ef1e5080418b30f890e24e0c573d31649cde";
+declare const OPENBOT_OVERLAY_HOST_SHA: "6826e11afd52f03c30af2d873203792acad95f63";
+declare const OPENBOT_PACKAGE_SPEC: "github:mimen/generative-ui-pack#4998ef1e5080418b30f890e24e0c573d31649cde";
+declare const OWNED_NAMES: readonly ["showRecord", "showMetrics", "showChecklist", "showQuote"];
+declare const RETAINED_NAMES: readonly ["askApproval", "askChoice", "showActivityReport", "showAreaChart", "showBarChart", "showLineChart", "showNotice", "showPieChart", "showProgress"];
+interface ReplacementRange {
+    readonly label: string;
+    readonly startLine: number;
+    readonly endLine: number;
+}
+interface OverlayPatch {
+    readonly path: string;
+    readonly expectedSha256: string | null;
+    readonly outputSha256: string;
+    readonly ranges: readonly ReplacementRange[];
+    readonly generated: boolean;
+}
+interface OpenBotOverlayManifest {
+    readonly formatVersion: 1;
+    readonly target: "openbot";
+    readonly hostCommit: typeof OPENBOT_OVERLAY_HOST_SHA;
+    readonly packageCommit: typeof OPENBOT_OVERLAY_CANDIDATE_SHA;
+    readonly packageSpec: typeof OPENBOT_PACKAGE_SPEC;
+    readonly ownedNames: typeof OWNED_NAMES;
+    readonly retainedNames: typeof RETAINED_NAMES;
+    readonly expectedNamesBefore: readonly string[];
+    readonly expectedNamesAfter: readonly string[];
+    readonly guards: readonly {
+        readonly path: string;
+        readonly expectedSha256: string;
+    }[];
+    readonly patches: readonly OverlayPatch[];
+}
+declare function validateOverlayManifest(manifest: OpenBotOverlayManifest, outputs: Readonly<Record<string, string>>): void;
+declare function compileOpenBotOverlayFiles(): readonly CompiledFile[];
+declare const OPENBOT_BASELINE_REGISTRY_SHA256: string;
+
 declare function stableJson(value: JsonValue): string;
 
 interface HostVerificationEvidence {
@@ -80,4 +117,4 @@ type HostVerificationResult = {
 declare function verifyHostCheckout(compatibility: HostCompatibility, checkout: string): Promise<HostVerificationResult>;
 declare function verifyHostRemote(compatibility: HostCompatibility, remote?: string): Promise<HostVerificationResult>;
 
-export { COMPATIBILITY_MANIFEST, type CompatibilityManifest, type CompileResult, type CompiledFile, type HostCompatibility, type HostVerificationEvidence, type HostVerificationResult, type JsonObject, type JsonPrimitive, type JsonValue, compatibilityManifestJson, compileAllTargets, compileTarget, stableJson, verifyHostCheckout, verifyHostRemote };
+export { COMPATIBILITY_MANIFEST, type CompatibilityManifest, type CompileResult, type CompiledFile, type HostCompatibility, type HostVerificationEvidence, type HostVerificationResult, type JsonObject, type JsonPrimitive, type JsonValue, OPENBOT_BASELINE_REGISTRY_SHA256, OPENBOT_OVERLAY_CANDIDATE_SHA, OPENBOT_OVERLAY_HOST_SHA, OPENBOT_PACKAGE_SPEC, type OpenBotOverlayManifest, compatibilityManifestJson, compileAllTargets, compileOpenBotOverlayFiles, compileTarget, stableJson, validateOverlayManifest, verifyHostCheckout, verifyHostRemote };

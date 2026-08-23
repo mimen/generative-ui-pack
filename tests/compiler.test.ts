@@ -12,10 +12,11 @@ describe("deterministic compiler contract", () => {
 		const second = compileTarget("openbot");
 
 		expect(first).toEqual(second);
-		expect(first.files.map((file) => file.path)).toEqual([
-			"compatibility-manifest.json",
-			"openbot/bindings.json",
-		]);
+		const paths = first.files.map((file) => file.path);
+		expect(paths).toEqual([...paths].sort());
+		expect(paths).toContain("compatibility-manifest.json");
+		expect(paths).toContain("openbot/bindings.json");
+		expect(paths).toContain("openbot/overlay-manifest.json");
 		expect(first.files.every((file) => file.content.endsWith("\n"))).toBe(true);
 	});
 

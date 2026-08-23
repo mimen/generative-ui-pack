@@ -7,6 +7,7 @@ import {
 import { OPENBOT_BINDINGS, type OpenBotBinding } from "../openbot/index";
 import { OPENMAUS_BINDINGS, type OpenMausBinding } from "../openmaus/index";
 import { COMPATIBILITY_MANIFEST, compatibilityManifestJson } from "./manifest";
+import { compileOpenBotOverlayFiles } from "./openbot-overlay";
 import { stableJson } from "./stable-json";
 import type { CompileResult, JsonObject, JsonValue } from "./types";
 
@@ -73,6 +74,7 @@ export function compileTarget(target: HostTarget): CompileResult {
 			path: `${target}/bindings.json`,
 			content: stableJson(bindingsJson(target)),
 		},
+		...(target === "openbot" ? compileOpenBotOverlayFiles() : []),
 	].sort((left, right) => {
 		if (left.path === right.path) return 0;
 		return left.path < right.path ? -1 : 1;

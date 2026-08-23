@@ -2,4 +2,6 @@ node_modules/
 generated/
 evidence/*.html
 evidence/*.png
+evidence/**/*.html
+evidence/**/*.png
 .DS_Store

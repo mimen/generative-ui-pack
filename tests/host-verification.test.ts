@@ -67,6 +67,46 @@ describe("host compatibility verification", () => {
 		expect(result.ok).toBe(true);
 	});
 
+	test("refuses a pinned source path that escapes the checkout", async () => {
+		const result = await verifyHostCheckout(
+			{ ...compatibility, sourceBlobs: { "../escape.txt": "0".repeat(64) } },
+			repository,
+		);
+		expect(result.ok).toBe(false);
+		expect(result.ok ? "" : result.error).toContain(
+			"Unsafe pinned source path",
+		);
+	});
+
+	test("refuses a pinned path reaching into git metadata", async () => {
+		const result = await verifyHostCheckout(
+			{ ...compatibility, sourceBlobs: { ".git/config": "0".repeat(64) } },
+			repository,
+		);
+		expect(result.ok).toBe(false);
+		expect(result.ok ? "" : result.error).toContain(
+			"Unsafe pinned source path",
+		);
+	});
+
+	test("refuses a commit that git could read as an option", async () => {
+		const result = await verifyHostRemote(
+			{ ...compatibility, commit: "--upload-pack=touch /tmp/pwned" },
+			repository,
+		);
+		expect(result.ok).toBe(false);
+		expect(result.ok ? "" : result.error).toContain("full hexadecimal SHA");
+	});
+
+	test("refuses a remote that git could read as an option", async () => {
+		const result = await verifyHostRemote(
+			compatibility,
+			"--upload-pack=touch /tmp/pwned",
+		);
+		expect(result.ok).toBe(false);
+		expect(result.ok ? "" : result.error).toContain("Unsafe host remote");
+	});
+
 	test("fails closed when a pinned source blob changes", async () => {
 		await writeFile(join(repository, sourcePath), "changed\n", "utf8");
 		const result = await verifyHostCheckout(compatibility, repository);
