@@ -1,0 +1,78 @@
+{
+  "name": "@mimen/generative-ui-pack",
+  "version": "0.1.0",
+  "description": "Portable schemas, React renderers, fixtures, and deterministic host compiler contracts for generative UI.",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": [
+    "./dist/styles.css"
+  ],
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE",
+    "THIRD_PARTY_LICENSES.md",
+    "README.md",
+    "CONTEXT.md"
+  ],
+  "bin": {
+    "generative-ui-pack": "./dist/cli.js"
+  },
+  "exports": {
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    },
+    "./compiler": {
+      "types": "./dist/compiler.d.ts",
+      "import": "./dist/compiler.js"
+    },
+    "./openbot": {
+      "types": "./dist/openbot.d.ts",
+      "import": "./dist/openbot.js"
+    },
+    "./openmaus": {
+      "types": "./dist/openmaus.d.ts",
+      "import": "./dist/openmaus.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "scripts": {
+    "build": "bun run scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check src tests scripts tsup.config.ts",
+    "test": "bun run build && bun test tests",
+    "check": "bun run typecheck && bun run lint && bun run test",
+    "render": "bun run scripts/render.tsx",
+    "evidence": "bun run render",
+    "compile": "bun run src/cli.ts compile",
+    "verify:host": "bun run scripts/verify-host.ts",
+    "verify:release": "bun run scripts/verify-release.ts"
+  },
+  "peerDependencies": {
+    "react": ">=19 <20",
+    "react-dom": ">=19 <20",
+    "zod": ">=4.4 <5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.2",
+    "@types/bun": "^1.4.0",
+    "@types/react": "^19.1.11",
+    "@types/react-dom": "^19.1.7",
+    "happy-dom": "^18.0.1",
+    "playwright": "^1.55.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "zod": "^4.1.5"
+  },
+  "engines": {
+    "bun": ">=1.2.0"
+  }
+}

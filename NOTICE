@@ -1,0 +1,23 @@
+Generative UI Pack
+Copyright 2026 Milad Imen and Generative UI Pack contributors
+
+Portions of the read-only Record, Metrics, Checklist, Quote, and Frame component
+work are adapted from OpenMausBot, Copyright 2026 Milind Soni and OpenMausBot
+contributors, licensed under the Apache License, Version 2.0.
+
+Reference source:
+- Repository: https://github.com/mimen/OpenMausBot
+- Source revision: 696ff1d5388342259379e1446b511ba82ae95afa
+- Files: src/components/ui/record-card.tsx, metrics-card.tsx,
+  checklist-card.tsx, quote-card.tsx, and frame.tsx
+
+The component contracts and preview fixtures also incorporate ideas from
+OpenBot, Copyright 2026 CopilotKit, licensed under the MIT License.
+
+Reference source:
+- Repository: https://github.com/CopilotKit/openbot
+- Compatibility baseline: 6826e11afd52f03c30af2d873203792acad95f63
+- Reference files: app/src/components/gallery/cards.tsx, quote.tsx, and frame.tsx
+
+The full Apache License, Version 2.0 is included in LICENSE. The OpenBot MIT
+license is reproduced in THIRD_PARTY_LICENSES.md.

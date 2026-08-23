@@ -1,0 +1,186 @@
+{
+	"bindings": [
+		{
+			"componentId": "record",
+			"confirmation": "The record is now on screen for the person.",
+			"description": "Show one thing and its fields, an order, a person, a ticket. Use instead of describing a record in prose.",
+			"inputSchema": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"properties": {
+					"fields": {
+						"description": "The fields, in the order they should be read",
+						"items": {
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"value": {
+									"description": "Already formatted for a person to read",
+									"type": "string"
+								}
+							},
+							"required": ["label", "value"],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"status": {
+						"description": "A short status word, e.g. Approved",
+						"type": "string"
+					},
+					"statusTone": {
+						"description": "How this reads at a glance. Use negative and caution sparingly, for a refusal, a breach or a failure, not for anything merely notable",
+						"enum": ["neutral", "positive", "caution", "negative"],
+						"type": "string"
+					},
+					"subtitle": {
+						"description": "One line of context under the title",
+						"type": "string"
+					},
+					"title": {
+						"description": "What this record is, e.g. a person or an order",
+						"type": "string"
+					}
+				},
+				"required": ["title", "fields"],
+				"type": "object"
+			},
+			"kind": "card",
+			"readOnly": true,
+			"schemaId": "record@1",
+			"title": "Record",
+			"toolName": "showRecord",
+			"viewVersion": 1
+		},
+		{
+			"componentId": "metrics",
+			"confirmation": "The figures are now on screen for the person.",
+			"description": "Show up to six headline figures, each with an optional movement. Use for a summary somebody reads at a glance.",
+			"inputSchema": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"properties": {
+					"caption": {
+						"type": "string"
+					},
+					"metrics": {
+						"description": "Up to six figures. More than that wanted a table",
+						"items": {
+							"properties": {
+								"change": {
+									"description": "The movement, e.g. '+12% on last month'",
+									"type": "string"
+								},
+								"changeTone": {
+									"description": "How this reads at a glance. Use negative and caution sparingly, for a refusal, a breach or a failure, not for anything merely notable",
+									"enum": ["neutral", "positive", "caution", "negative"],
+									"type": "string"
+								},
+								"label": {
+									"type": "string"
+								},
+								"value": {
+									"description": "Already formatted, including any unit or currency",
+									"type": "string"
+								}
+							},
+							"required": ["label", "value"],
+							"type": "object"
+						},
+						"maxItems": 6,
+						"type": "array"
+					},
+					"title": {
+						"description": "What these figures are about",
+						"type": "string"
+					}
+				},
+				"required": ["title", "metrics"],
+				"type": "object"
+			},
+			"kind": "card",
+			"readOnly": true,
+			"schemaId": "metrics@1",
+			"title": "Headline figures",
+			"toolName": "showMetrics",
+			"viewVersion": 1
+		},
+		{
+			"componentId": "checklist",
+			"confirmation": "The checklist is now on screen for the person.",
+			"description": "Show a list of things and which are done. Reporting only, the person cannot tick these, so do not use it to ask for anything.",
+			"inputSchema": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"properties": {
+					"caption": {
+						"type": "string"
+					},
+					"items": {
+						"description": "The items, in the order they should be done",
+						"items": {
+							"properties": {
+								"done": {
+									"description": "Whether this one is already finished",
+									"type": "boolean"
+								},
+								"note": {
+									"description": "A short aside, e.g. who it is waiting on",
+									"type": "string"
+								},
+								"text": {
+									"type": "string"
+								}
+							},
+							"required": ["text", "done"],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"title": {
+						"description": "What this list is",
+						"type": "string"
+					}
+				},
+				"required": ["title", "items"],
+				"type": "object"
+			},
+			"kind": "card",
+			"readOnly": true,
+			"schemaId": "checklist@1",
+			"title": "Checklist",
+			"toolName": "showChecklist",
+			"viewVersion": 1
+		},
+		{
+			"componentId": "quote",
+			"confirmation": "The quotation is now on screen for the person.",
+			"description": "Show a quotation with its attribution. Use when the exact words matter, something a person said, or a line from a document you were given.",
+			"inputSchema": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"properties": {
+					"attribution": {
+						"description": "Who said or wrote it, e.g. 'Grace Hopper' or 'the 2026 annual report'",
+						"type": "string"
+					},
+					"context": {
+						"description": "One short line of context: where it is from, or why it matters here",
+						"type": "string"
+					},
+					"quote": {
+						"description": "The quotation itself, without surrounding quote marks",
+						"type": "string"
+					}
+				},
+				"required": ["quote", "attribution"],
+				"type": "object"
+			},
+			"kind": "card",
+			"readOnly": true,
+			"schemaId": "quote@1",
+			"title": "Quotation",
+			"toolName": "showQuote",
+			"viewVersion": 1
+		}
+	],
+	"generatedFileFormatVersion": 1,
+	"target": "openbot"
+}
