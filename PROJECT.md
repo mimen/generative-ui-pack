@@ -11,10 +11,10 @@ A portable package of read-only generative UI contracts and React renderers for 
 
 | Component | Path | What it is | Surfaces | Stack |
 |---|---|---|---|---|
-| view-contracts | `src/core/` | Versioned Zod schemas, component definitions, preview fixtures, and shared types exported through the core subpath. | library | ts, zod, bun |
+| view-contracts | `src/core/` | Versioned Zod schemas, component definitions, preview fixtures, and shared types exported through the core subpath. | library | ts, bun |
 | react-renderers | `src/react/` | Pure, accessible React presentation and semantic CSS for resolved view data. | library | ts, react, bun |
 | compiler | `src/compiler/`, `src/cli.ts` | Compiler library and Bun CLI for deterministic manifests, host overlays, and compatibility verification. | library, cli-tui | ts, bun |
-| host-bindings | `src/openbot/`, `src/openmaus/` | Host-specific tool-input schemas and read-only binding metadata exported through separate package subpaths. | library | ts, zod, bun |
+| host-bindings | `src/openbot/`, `src/openmaus/` | Host-specific tool-input schemas and read-only binding metadata exported through separate package subpaths. | library | ts, bun |
 
 ## How they relate
 
